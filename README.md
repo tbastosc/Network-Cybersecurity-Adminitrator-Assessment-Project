@@ -27,7 +27,6 @@ CodeSecure operates a private datacenter hosting **120 production websites** and
   4. **Infrastructure & Datacenter Operations:** Production servers, networking hardware, SIEM, and monitoring nodes.
 * **Core Requirement:** Complete network segmentation separating internal departmental operations, datacenter infrastructure, and external multi-tenant client environments.
 
-![Scenario Framing - CodeSecure Lda](images/scenario_framing.png)
 
 ---
 
