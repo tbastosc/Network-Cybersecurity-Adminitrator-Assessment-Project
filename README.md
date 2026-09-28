@@ -104,8 +104,11 @@ The redesigned network architecture adheres strictly to **Defense-in-Depth**. Pe
    * **DHCP Snooping & Dynamic ARP Inspection (DAI):** Mitigates rogue DHCP insertion and ARP poisoning by validating ARP packets against the DHCP binding database.
    * **Default Gateway Redundancy:** High Availability HSRP configured across core distribution switches.
    * **Centralized AAA:** Administrative switch access controlled via FreeRADIUS with mandatory SSHv2 encryption.
+   * **VPN for remote access:** Implemented VPN IpSec or SSL for remote access.
+   * **Use ZTNA Twingate connector - Safer alternative to VPN remote access**
 
-![Reverse Proxy Architecture Solution](images/reverse_proxy_arch.png)
+     
+![Topology](images/packet_topology.png)
 
 ---
 
@@ -208,6 +211,8 @@ To replace vulnerable legacy OS instances, all Linux virtual machines were redep
 5. **Web Application Security (ModSecurity WAF):**
    * Nginx Reverse Proxy integrated with ModSecurity v3 and OWASP Core Rule Set (CRS).
    * Filters HTTP traffic against SQLi, XSS, LFI, and RCE attempt vectors before traffic reaches backend application nodes.
+  
+![Reverse Proxy Architecture Solution](images/reverse_proxy_arch.png)
 
 ---
 
@@ -285,7 +290,8 @@ To provide CodeSecure's executive board with a practical execution path, securit
 * **Deploy Centralized Wazuh SIEM & EDR:** Install Wazuh Agents across all Linux servers, Windows DCs, and employee endpoints; configure automated active response for IP blocking.
 * **Active Directory Software Restriction Policies (SRP):** Enforce GPOs blocking binary and script executions within `%APPDATA%` and `%TEMP%` user directories.
 * **YARA Malware Automation:** Integrate automated YARA scanning triggers with Wazuh for real-time web root (`/var/www`) file inspection and quarantine.
-
+* **ZTNA Twingate connectors to remote network access** Alternative to VPN's keeping audits compliance for networking remote access.
+* 
 ### 🎯 Long-Term Implementations (90–180+ Days)
 * **Enforce Multi-Factor Authentication (MFA / TOTP):** Mandate hardware token or TOTP MFA across all administrative SSH sessions, VPN access, and Active Directory logins.
 * **Automated Vulnerability Management:** Integrate OpenVAS continuous vulnerability scanners into the Wazuh dashboard for automated weekly patch delta reporting.
