@@ -11,7 +11,7 @@
 
 ## 📌 Executive Summary & Project Framing
 
-This repository contains the master **Cybersecurity Risk Assessment, Vulnerability Audit, and Defense-in-Depth Implementation Report** delivered for **CodeSecure, Lda.**, a software development and cloud hosting provider (~40 employees). 
+This repository contains the master **Cybersecurity Risk Assessment, Vulnerability Audit, and Defense-in-Depth Implementation Report SUMMARY** delivered for **CodeSecure, Lda.**, a software development and cloud hosting provider (~40 employees). 
 
 CodeSecure operates an internal enterprise network alongside a private datacenter hosting **120 production client websites** and **14 dedicated virtual machines**. Facing elevated exposure from public web services and stringent compliance mandates (e.g., GDPR), this assessment documents the complete transition from an unpatched, flat network infrastructure to a hardened, segmented, and continuously monitored **Defense-in-Depth** security baseline.
 
