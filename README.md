@@ -1,4 +1,4 @@
-# CodeSecure Infrastructure: Cybersecurity Risk Assessment & Infrastructure Defense Report
+# CodeSecure Infrastructure: Cybersecurity Risk Assessment & Infrastructure Defense Report (COMPACTED VERSION)
 
 [![Security Infrastructure](https://img.shields.io/badge/Infrastructure-Defense%20in%20Depth-blue?style=for-the-badge&logo=shield)](https://github.com)
 [![OS Basis](https://img.shields.io/badge/Linux-Debian%2013%20Hardened-red?style=for-the-badge&logo=debian)](https://github.com)
